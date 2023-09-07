@@ -31,7 +31,6 @@ public class Parent {
                 throw new RuntimeException(e);
             }
         }
-        myChild.interrupt();
         try {
             myChild.join();
         } catch (InterruptedException e) {
