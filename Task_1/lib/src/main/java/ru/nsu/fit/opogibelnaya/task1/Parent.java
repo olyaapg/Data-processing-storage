@@ -9,16 +9,13 @@ public class Parent {
     private final Thread myChild;
 
     public Parent() {
-        myChild = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < 5 && !myChild.isInterrupted(); i++) {
-                    System.out.println("Child!");
-                    try {
-                        sleep(300);
-                    } catch (InterruptedException e) {
-                        myChild.interrupt();
-                    }
+        myChild = new Thread(() -> {
+            for (int i = 0; i < 5; i++) {
+                System.out.println("Child!");
+                try {
+                    sleep(300);
+                } catch (InterruptedException e) {
+                    break;
                 }
             }
         });
