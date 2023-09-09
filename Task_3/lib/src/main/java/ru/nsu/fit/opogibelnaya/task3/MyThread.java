@@ -9,7 +9,7 @@ public class MyThread extends Thread {
         toPrint = str;
     }
 
-    private void print(List<String> list) {
+    private static synchronized void print(List<String> list) {
         for (String str : list) {
             System.out.println(str);
         }

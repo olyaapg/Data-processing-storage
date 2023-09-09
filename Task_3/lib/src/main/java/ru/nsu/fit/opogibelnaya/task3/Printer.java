@@ -10,7 +10,7 @@ public class Printer {
     }
 
     public void print() {
-        List<MyThread> threads = new ArrayList<>(4);
+        List<MyThread> threads = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             threads.add(new MyThread(list.get(i)));
         }

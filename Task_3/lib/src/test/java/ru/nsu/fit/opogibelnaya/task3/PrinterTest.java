@@ -21,7 +21,7 @@ class PrinterTest {
         input.get(0).add("I'm Ben!");
 
         input.get(1).add("Hi!");
-        input.get(1).add("He's lying.");
+        input.get(1).add("Everybody's lying.");
         input.get(1).add("I'm Mark!");
 
         input.get(2).add("Good morning, everyone!");
@@ -29,7 +29,7 @@ class PrinterTest {
         input.get(2).add("Today I want to tell you about...");
 
         input.get(3).add("Good night...");
-        input.get(3).add("I'm a baby, I'm going to sleep...");
+        input.get(3).add("I'm going to sleep...");
 
         Printer printer = new Printer(input);
         printer.print();
