@@ -39,12 +39,13 @@ public class App {
 
         ExecutorService threadPool = Executors.newFixedThreadPool(nThreads);
         List<Future<Double>> result;
+        System.out.println("Let's start...");
         try {
             result = threadPool.invokeAll(createTasks(nThreads, nIterations));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Pi = " + result.stream().map(x -> {
+        System.out.println("Pi/4 = " + result.stream().map(x -> {
             try {
                 return x.get();
             } catch (InterruptedException | ExecutionException e) {
