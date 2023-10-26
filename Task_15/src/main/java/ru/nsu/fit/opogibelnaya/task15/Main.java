@@ -1,11 +1,14 @@
 package ru.nsu.fit.opogibelnaya.task15;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 
 public class Main {
@@ -15,38 +18,55 @@ public class Main {
       System.out.println("Error input");
       return;
     }
-    String url = args[0];
+    try {
+      URL url = (URI.create(args[0])).toURL();
+      HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+      connection.connect();
+      if (connection.getResponseCode() == 200) {
+        InputStream input = connection.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+        BlockingQueue<String> queue = new ArrayBlockingQueue<>(100);
+        int lineCount = 0;
 
-    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-      HttpGet httpGet = new HttpGet(url);
-      HttpResponse response = httpClient.execute(httpGet);
-
-      HttpEntity entity = response.getEntity();
-      if (entity != null) {
-        String content = EntityUtils.toString(entity);
-        String[] lines = content.split(System.lineSeparator());
-        int pageSize = 25;
-        int startIndex = 0;
-        int endIndex = Math.min(pageSize, lines.length);
-        while (startIndex < lines.length) {
-          for (int i = startIndex; i < endIndex; i++) {
-            System.out.println(lines[i]);
-          }
-          if (endIndex < lines.length) {
-            System.out.println("Press enter to scroll down...");
-            int b = System.in.read();
-            while (b != 10) {
-              b = System.in.read();
+        Thread thread = new Thread(() -> {
+          String line;
+          try {
+            while ((line = reader.readLine()) != null) {
+              queue.put(line);
             }
-          } else {
-            break;
+          } catch (InterruptedException | IOException e) {
+            throw new RuntimeException(e);
           }
-          startIndex = endIndex;
-          endIndex = Math.min(endIndex + pageSize, lines.length);
+        });
+        thread.start();
+
+        try {
+          Thread.sleep(1000);
+        } catch (InterruptedException e) {
+          throw new RuntimeException(e);
         }
+        while (lineCount < 25 && !queue.isEmpty()) {
+          try {
+            System.out.println(queue.take());
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+          lineCount++;
+          if (lineCount == 25) {
+            System.out.println("Press space to scroll down...");
+            System.in.read();
+            lineCount = 0;
+          }
+        }
+        reader.close();
+      } else {
+        System.out.println(
+            "HTTP request failed with response code: " + connection.getResponseCode());
       }
-    } catch (Exception e) {
-      System.out.println(e.getMessage());
+      connection.disconnect();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+
   }
 }
