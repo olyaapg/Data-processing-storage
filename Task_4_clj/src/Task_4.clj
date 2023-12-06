@@ -1,3 +1,7 @@
+(ns Task_4
+  (:import (java.text SimpleDateFormat)
+           (java.util Date)))
+
 (declare supply-msg)
 (declare notify-msg)
 
@@ -42,14 +46,14 @@
                       :buffer buffer}]
     {:worker (agent worker-state)}))
 
-(defn my-source
+(defn source
   "Creates a source that is a thread that produces 'amount' of wares per cycle to store in 'target-storage'
    and with given cycle 'duration' in milliseconds
    returns Thread that must be run explicitly"
   [amount duration target-storage]
   (new Thread
        (fn []
-         (Thread/sleep ^long duration)
+         (Thread/sleep duration)
          (send (target-storage :worker) supply-msg amount)
          (recur))))
 
@@ -58,7 +62,7 @@
    Adds the given 'amount' of ware to the storage and notifies all the registered factories about it
    state - see code of 'storage' for structure"
   [state amount]
-  (swap! (state :storage) #(+ % amount))      ;update counter, could not fail
+  (swap! (state :storage) #(+ % amount)) ;update counter, could not fail
   (let [ware (state :ware),
         cnt @(state :storage),
         notify-step (state :notify-step),
@@ -67,13 +71,13 @@
     (when (and (> notify-step 0)
                (> (int (/ cnt notify-step))
                   (int (/ (- cnt amount) notify-step))))
-      (println (.format (new java.text.SimpleDateFormat "hh.mm.ss.SSS") (new java.util.Date))
+      (println (.format (new SimpleDateFormat "hh.mm.ss.SSS") (new Date))
                "|" ware "amount: " cnt))
     ;;factories notification part
     (when consumers
       (doseq [consumer (shuffle consumers)]
-        (send (consumer :worker) notify-msg ware (state :storage) amount))))
-  state)                 ;worker itself is immutable, keeping configuration only
+        (send (consumer :worker) notify-msg ware (state :storage)))))
+  state) ;worker itself is immutable, keeping configuration only
 
 (defn notify-msg
   "A message that can be sent to a factory worker to notify that the provided 'amount' of 'ware's are
@@ -91,18 +95,17 @@
 
   (let [buffer (state :buffer),
         bill (state :bill),
-        duration (state :duration)]
+        duration (state :duration),
+        lack (- (bill ware) (buffer ware))]
 
-    (try
-      (swap! storage-atom #(- % amount))
-      (assoc buffer ware amount)
-      (if (every? (fn [key value] (>= (buffer key) value)) bill)
-        ((Thread/sleep ^long duration)
-         (reduce (fn [acc k] (assoc acc k (- (ware buffer) amount))) buffer (keys buffer))
-         (send (state :target-storage) supply-msg (state :amount))))
-      (catch IllegalStateException _ "Error"))
-
-    state))
+    (if (<= lack amount)
+      ((swap! storage-atom #(- % lack))
+       (assoc buffer ware (+ (buffer ware) lack))
+       (if (every? (fn [key value] (>= (buffer key) value)) bill)
+         ((Thread/sleep duration)
+          (assoc state :buffer (reduce-kv (fn [acc k _] (assoc acc k 0)) {} bill))
+          (send ((state :target-storage) :worker) supply-msg (state :amount))))))
+  state))
 
 
 (def safe-storage (storage "Safe" 1))
@@ -114,9 +117,9 @@
 (def metal-storage (storage "Metal" 5 safe-factory))
 (def metal-factory (factory 1 1000 metal-storage "Ore" 10))
 (def lumber-storage (storage "Lumber" 20 cuckoo-clock-factory))
-(def lumber-mill (my-source 5 4000 lumber-storage))
+(def lumber-mill (source 5 4000 lumber-storage))
 (def ore-storage (storage "Ore" 10 metal-factory gears-factory))
-(def ore-mine (my-source 2 1000 ore-storage))
+(def ore-mine (source 2 1000 ore-storage))
 
 ;;;runs sources and the whole process as the result
 (defn start []
@@ -132,3 +135,12 @@
 ;;;This could be used to acquire errors from workers
 ;;;(agent-error (gears-factory :worker))
 ;;;(agent-error (metal-storage :worker))
+
+
+(defn run []
+  (start)
+  (Thread/sleep 100000)
+  (stop)
+  (shutdown-agents))
+
+(run)
