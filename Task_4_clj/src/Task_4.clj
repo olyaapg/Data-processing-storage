@@ -76,7 +76,7 @@
     ;;factories notification part
     (when consumers
       (doseq [consumer (shuffle consumers)]
-        (send (consumer :worker) notify-msg ware (state :storage)))))
+        (send (consumer :worker) notify-msg ware (state :storage) amount))))
   state) ;worker itself is immutable, keeping configuration only
 
 (defn notify-msg
@@ -93,19 +93,25 @@
   ;; - return new agent state with possibly modified ':buffer' in any case!
   [state ware storage-atom amount]
 
+
   (let [buffer (state :buffer),
         bill (state :bill),
         duration (state :duration),
-        lack (- (bill ware) (buffer ware))]
+        target-storage (state :target-storage),
+        lack (- (bill ware) (buffer ware)),
+        n-taken (min lack (deref storage-atom)),
+        new-buffer (assoc buffer ware (+ n-taken (buffer ware)))]
 
-    (if (<= lack amount)
-      ((swap! storage-atom #(- % lack))
-       (assoc buffer ware (+ (buffer ware) lack))
-       (if (every? (fn [key value] (>= (buffer key) value)) bill)
-         ((Thread/sleep duration)
-          (assoc state :buffer (reduce-kv (fn [acc k _] (assoc acc k 0)) {} bill))
-          (send ((state :target-storage) :worker) supply-msg (state :amount))))))
-  state))
+    (try
+      (swap! storage-atom (fn [x] (- x n-taken)))
+      (if (= bill new-buffer)
+        (do
+          (Thread/sleep duration)
+          (send (target-storage :worker) supply-msg (state :amount))
+          (assoc state :buffer (reduce-kv (fn [acc k _] (assoc acc k 0)) {} bill)))
+        (assoc state :buffer new-buffer))
+      (catch IllegalStateException ex "Error"))
+    ))
 
 
 (def safe-storage (storage "Safe" 1))
