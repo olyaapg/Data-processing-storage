@@ -16,13 +16,13 @@
      :worker - an agent to send supply-msg"
   [ware notify-step & consumers]
   (let [counter (atom 0 :validator #(>= % 0)),
-        worker-state {:storage counter,
-                      :ware ware,
+        worker-state {:storage     counter,
+                      :ware        ware,
                       :notify-step notify-step,
-                      :consumers consumers}]
+                      :consumers   consumers}]
     {:storage counter,
-     :ware ware,
-     :worker (agent worker-state)}))
+     :ware    ware,
+     :worker  (agent worker-state)}))
 
 (defn factory
   "Creates a new factory
@@ -39,11 +39,11 @@
         ;;     shows how many wares must be consumed to perform one production cycle
         ;;  :buffer - a map with similar structure as for :bill that shows how many wares are already collected;
         ;;     it is the only mutable part.
-        worker-state {:amount amount,
-                      :duration duration,
+        worker-state {:amount         amount,
+                      :duration       duration,
                       :target-storage target-storage,
-                      :bill bill,
-                      :buffer buffer}]
+                      :bill           bill,
+                      :buffer         buffer}]
     {:worker (agent worker-state)}))
 
 (defn source
@@ -62,7 +62,7 @@
    Adds the given 'amount' of ware to the storage and notifies all the registered factories about it
    state - see code of 'storage' for structure"
   [state amount]
-  (swap! (state :storage) #(+ % amount)) ;update counter, could not fail
+  (swap! (state :storage) #(+ % amount))                    ;update counter, could not fail
   (let [ware (state :ware),
         cnt @(state :storage),
         notify-step (state :notify-step),
@@ -77,7 +77,7 @@
     (when consumers
       (doseq [consumer (shuffle consumers)]
         (send (consumer :worker) notify-msg ware (state :storage) amount))))
-  state) ;worker itself is immutable, keeping configuration only
+  state)                                                    ;worker itself is immutable, keeping configuration only
 
 (defn notify-msg
   "A message that can be sent to a factory worker to notify that the provided 'amount' of 'ware's are
@@ -99,18 +99,16 @@
         duration (state :duration),
         target-storage (state :target-storage),
         lack (- (bill ware) (buffer ware)),
-        n-taken (min lack (deref storage-atom)),
+        [old-val new-val] (swap-vals! storage-atom (fn [x] (- x (min x lack)))),
+        n-taken (- old-val new-val),
         new-buffer (assoc buffer ware (+ n-taken (buffer ware)))]
 
-    (try
-      (swap! storage-atom (fn [x] (- x n-taken)))
-      (if (= bill new-buffer)
-        (do
-          (Thread/sleep duration)
-          (send (target-storage :worker) supply-msg (state :amount))
-          (assoc state :buffer (reduce-kv (fn [acc k _] (assoc acc k 0)) {} bill)))
-        (assoc state :buffer new-buffer))
-      (catch IllegalStateException ex "Error"))
+    (if (= bill new-buffer)
+      (do
+        (Thread/sleep duration)
+        (send (target-storage :worker) supply-msg (state :amount))
+        (assoc state :buffer (reduce-kv (fn [acc k _] (assoc acc k 0)) {} bill)))
+      (assoc state :buffer new-buffer))
     ))
 
 
@@ -135,18 +133,17 @@
 ;;;stops running process
 ;;;recompile the code after it to reset all the process
 (defn stop []
-  (.stop ore-mine)
-  (.stop lumber-mill))
+  (.interrupt ore-mine)
+  (.interrupt lumber-mill)
+  (shutdown-agents))
 
 ;;;This could be used to acquire errors from workers
 ;;;(agent-error (gears-factory :worker))
 ;;;(agent-error (metal-storage :worker))
 
-
-(defn run []
+(defn main []
   (start)
-  (Thread/sleep 100000)
-  (stop)
-  (shutdown-agents))
+  (Thread/sleep 120000)
+  (stop))
 
-(run)
+(main)
