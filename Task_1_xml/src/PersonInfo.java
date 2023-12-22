@@ -2,6 +2,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class PersonInfo {
+
   public String id;
   public String firstname;
   public String surname;

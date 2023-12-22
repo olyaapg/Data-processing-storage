@@ -1,7 +1,6 @@
 import java.io.InputStream;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -9,31 +8,13 @@ import javax.xml.stream.XMLStreamReader;
 
 public class MyParser {
 
-  public Set<PersonInfo> people;
-  private PersonInfo personInfo;
-
-  public Set<String> attr = new HashSet<>();
-  public Set<String> attrVal = new HashSet<>();
-  public int allTimes = 0;
-  public int countAttr = 0;
-
-  private void getAttr(XMLStreamReader reader) {
-    allTimes++;
-    for (int i = 0; i < reader.getAttributeCount(); i++) {
-      attr.add(reader.getAttributeLocalName(i));
-      countAttr++;
-    }
-  }
-
-  private void checkValues(XMLStreamReader reader) {
-    for (int i = 0; i < reader.getAttributeCount(); i++) {
-      attrVal.add(reader.getAttributeValue(i));
-    }
-  }
-
-  public Set<PersonInfo> parse(InputStream stream) throws XMLStreamException {
+  public ArrayList<PersonInfo> parse(InputStream stream) throws XMLStreamException {
     XMLInputFactory streamFactory = XMLInputFactory.newInstance();
     XMLStreamReader reader = streamFactory.createXMLStreamReader(stream);
+
+    PersonInfo personInfo = null;
+    ArrayList<PersonInfo> people = null;
+    int nPeople = 0;
 
     for (; reader.hasNext(); reader.next()) {
       int eventType = reader.getEventType();
@@ -44,8 +25,8 @@ public class MyParser {
           case ("people") -> {
             var strN = reader.getAttributeLocalName(0);
             if (strN.equals("count")) {
-              var n = Integer.parseInt(reader.getAttributeValue(0));
-              people = new HashSet<>(n);
+              nPeople = Integer.parseInt(reader.getAttributeValue(0));
+              people = new ArrayList<>();
             } else {
               System.out.println("There's no count");
             }
@@ -66,6 +47,7 @@ public class MyParser {
           }
           case ("id") -> {
             if (reader.getAttributeLocalName(0).equals("value")) {
+              assert personInfo != null;
               personInfo.id = reader.getAttributeValue(0).trim();
             } else {
               System.out.println("Unknown attribute in id");
@@ -74,17 +56,20 @@ public class MyParser {
           case ("firstname") -> {
             if (reader.getAttributeCount() > 0) {
               if (reader.getAttributeLocalName(0).equals("value")) {
+                assert personInfo != null;
                 personInfo.firstname = reader.getAttributeValue(0).trim();
               } else {
                 System.out.println("Unknown attribute in firstname");
               }
             } else {
               reader.next();
+              assert personInfo != null;
               personInfo.firstname = reader.getText().trim();
             }
           }
           case ("surname") -> {
             if (reader.getAttributeLocalName(0).equals("value")) {
+              assert personInfo != null;
               personInfo.surname = reader.getAttributeValue(0).trim();
             } else {
               System.out.println("Unknown attribute in surname");
@@ -94,15 +79,18 @@ public class MyParser {
           }
           case ("first") -> {
             reader.next();
+            assert personInfo != null;
             personInfo.firstname = reader.getText().trim();
           }
           case ("family"), ("family-name") -> {
             reader.next();
+            assert personInfo != null;
             personInfo.surname = reader.getText().trim();
           }
           case ("gender") -> {
             if (reader.getAttributeCount() > 0) {
               if (reader.getAttributeLocalName(0).equals("value")) {
+                assert personInfo != null;
                 personInfo.gender = reader.getAttributeValue(0).trim().toUpperCase()
                     .substring(0, 1);
               } else {
@@ -110,6 +98,7 @@ public class MyParser {
               }
             } else {
               reader.next();
+              assert personInfo != null;
               personInfo.gender = reader.getText().trim().toUpperCase().substring(0, 1);
             }
           }
@@ -117,6 +106,7 @@ public class MyParser {
             if (reader.getAttributeCount() > 0) {
               if (reader.getAttributeLocalName(0).equals("value")) {
                 if (!reader.getAttributeValue(0).trim().equals("NONE")) {
+                  assert personInfo != null;
                   personInfo.spouseName = reader.getAttributeValue(0);
                 }
               } else {
@@ -126,6 +116,7 @@ public class MyParser {
           }
           case ("husband") -> {
             if (reader.getAttributeLocalName(0).equals("value")) {
+              assert personInfo != null;
               personInfo.husbandId = reader.getAttributeValue(0).trim();
             } else {
               System.out.println("Unknown attribute in husband");
@@ -133,6 +124,7 @@ public class MyParser {
           }
           case ("wife") -> {
             if (reader.getAttributeLocalName(0).equals("value")) {
+              assert personInfo != null;
               personInfo.wifeId = reader.getAttributeValue(0).trim();
             } else {
               System.out.println("Unknown attribute in wife");
@@ -141,21 +133,25 @@ public class MyParser {
           case ("siblings") -> {
             if (reader.getAttributeCount() > 0 && reader.getAttributeLocalName(0).equals("val")) {
               String[] siblings = reader.getAttributeValue(0).split("\\s+");
+              assert personInfo != null;
               personInfo.siblingsID.addAll(List.of(siblings));
             }
           }
           case ("brother") -> {
             reader.next();
             var brotherName = reader.getText().split("\\s+");
+            assert personInfo != null;
             personInfo.brothersID.add(brotherName[0] + " " + brotherName[1]);
           }
           case ("sister") -> {
             reader.next();
             var sisterName = reader.getText().split("\\s+");
+            assert personInfo != null;
             personInfo.sistersID.add(sisterName[0] + " " + sisterName[1]);
           }
           case ("siblings-number") -> {
             if (reader.getAttributeLocalName(0).equals("value")) {
+              assert personInfo != null;
               personInfo.siblingsCount = Integer.parseInt(reader.getAttributeValue(0).trim());
             } else {
               System.out.println("Unknown attribute in siblings-number");
@@ -164,10 +160,12 @@ public class MyParser {
           case ("child") -> {
             reader.next();
             var childName = reader.getText().split("\\s+");
+            assert personInfo != null;
             personInfo.childrenNames.add(childName[0] + " " + childName[1]);
           }
           case ("son") -> {
             if (reader.getAttributeLocalName(0).equals("id")) {
+              assert personInfo != null;
               personInfo.sonsID.add(reader.getAttributeValue(0).trim());
             } else {
               System.out.println("Unknown attribute in son");
@@ -175,12 +173,14 @@ public class MyParser {
           }
           case ("daughter") -> {
             if (reader.getAttributeLocalName(0).equals("id")) {
+              assert personInfo != null;
               personInfo.daughtersID.add(reader.getAttributeValue(0).trim());
             } else {
               System.out.println("Unknown attribute in daughter");
             }
           }
           case ("parent") -> {
+            assert personInfo != null;
             if (reader.getAttributeCount() > 0 && reader.getAttributeLocalName(0).equals("value")) {
               if (!reader.getAttributeValue(0).trim().equals("UNKNOWN")) {
                 personInfo.parentsID.add(reader.getAttributeValue(0).trim());
@@ -190,15 +190,18 @@ public class MyParser {
           case ("father") -> {
             reader.next();
             var fatherName = reader.getText().split("\\s+");
+            assert personInfo != null;
             personInfo.fatherName = fatherName[0] + " " + fatherName[1];
           }
           case ("mother") -> {
             reader.next();
             var motherName = reader.getText().split("\\s+");
+            assert personInfo != null;
             personInfo.motherName = motherName[0] + " " + motherName[1];
           }
           case ("children-number") -> {
             if (reader.getAttributeLocalName(0).equals("value")) {
+              assert personInfo != null;
               personInfo.childrenCount = Integer.parseInt(reader.getAttributeValue(0));
             } else {
               System.out.println("Unknown attribute in children-number");
@@ -207,15 +210,17 @@ public class MyParser {
         }
       } else if (eventType == XMLStreamConstants.END_ELEMENT) {
         if (reader.getLocalName().equals("person")) {
+          assert people != null;
           people.add(personInfo);
           personInfo = null;
         }
       }
     }
-    System.out.println(attr);
-    System.out.println(allTimes);
-    System.out.println(countAttr);
-    System.out.println(attrVal);
+    reader.close();
+    return putInOrder(people, nPeople);
+  }
+
+  private ArrayList<PersonInfo> putInOrder(ArrayList<PersonInfo> people, int nPeople) {
     return people;
   }
 }
