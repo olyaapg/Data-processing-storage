@@ -1,6 +1,11 @@
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -221,6 +226,59 @@ public class MyParser {
   }
 
   private ArrayList<PersonInfo> putInOrder(ArrayList<PersonInfo> people, int nPeople) {
+    HashMap<String, PersonInfo> peopleWithID = new HashMap<>();
+    ArrayList<PersonInfo> rest = new ArrayList<>();
+
+    for (PersonInfo person : people) {
+      if (person.id != null) {
+        if (peopleWithID.containsKey(person.id)) {
+          peopleWithID.get(person.id).merge(person);
+        } else {
+          peopleWithID.put(person.id, person);
+        }
+      } else {
+        rest.add(person);
+      }
+    }
+
+    assert peopleWithID.size() == nPeople;
+
+    people = rest;
+    rest = new ArrayList<>();
+
+    Predicate<PersonInfo> nonNullName = person -> person.firstname != null && person.surname != null;
+    assert peopleWithID.values().parallelStream().allMatch(nonNullName);
+    assert people.parallelStream().allMatch(nonNullName);
+
+    for (PersonInfo person : people) {
+      Predicate<PersonInfo> nameEquals = person2 -> person.firstname.equals(person2.firstname)
+          && person.surname.equals(person2.surname);
+      List<PersonInfo> similarPeople = findSimilar(nameEquals, peopleWithID.values());
+      if (similarPeople.size() > 1) {
+        rest.addAll(similarPeople);
+        PersonInfo somePerson = similarPeople.get(0);
+        somePerson.merge(person);
+      } else {
+        similarPeople.get(0).merge(person);
+      }
+    }
+
+    people = rest;
+    rest = new ArrayList<>();
+
+
+    System.out.println(rest);
+    System.out.println(rest.size());
+    HashSet<PersonInfo> personInfoHashSet = new HashSet<>(rest);
+    System.out.println(personInfoHashSet.size());
     return people;
+  }
+
+  private List<PersonInfo> findSimilar(Predicate<PersonInfo> predicate,
+      Collection<PersonInfo> people) {
+    return people.
+        parallelStream().
+        filter(predicate).
+        collect(Collectors.toList());
   }
 }

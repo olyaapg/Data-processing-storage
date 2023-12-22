@@ -1,0 +1,8 @@
+Janeen Robbinson P387807 0 2 1 0
+Janeen Robbinson P382644 0 0 3 3
+Kaylene Startz P411821 null 0 null 0
+Kaylene Startz P406658 0 2 1 2
+Tonya Loschiavo P385164 0 0 2 5
+Tonya Loschiavo P390327 null 0 2 1
+
+последние два - количество siblings и их реальное количество

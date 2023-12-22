@@ -10,6 +10,8 @@ public class PersonInfo {
 
   public String motherName;
   public String fatherName;
+  public Set<String> parentsID = new HashSet<>();
+
   public String wifeId;
   public String husbandId;
   public String spouseName;
@@ -23,5 +25,51 @@ public class PersonInfo {
   public Set<String> brothersID = new HashSet<>();
   public Set<String> sistersID = new HashSet<>();
   public Set<String> siblingsID = new HashSet<>();
-  public Set<String> parentsID = new HashSet<>();
+
+  public void merge(PersonInfo somePerson) {
+    if (id == null) {
+      id = somePerson.id;
+    }
+    if (firstname == null) {
+      firstname = somePerson.firstname;
+    }
+    if (surname == null) {
+      surname = somePerson.surname;
+    }
+    if (gender == null) {
+      gender = somePerson.gender;
+    }
+
+    if (motherName == null) {
+      motherName = somePerson.motherName;
+    }
+    if (fatherName == null) {
+      fatherName = somePerson.fatherName;
+    }
+    parentsID.addAll(somePerson.parentsID);
+
+    if (wifeId == null) {
+      wifeId = somePerson.wifeId;
+    } else if (husbandId == null) {
+      husbandId = somePerson.husbandId;
+    }
+    if (spouseName == null) {
+      spouseName = somePerson.spouseName;
+    }
+
+    if (siblingsCount == null) {
+      siblingsCount = somePerson.siblingsCount;
+    }
+    if (childrenCount == null) {
+      childrenCount = somePerson.childrenCount;
+    }
+
+    sonsID.addAll(somePerson.sonsID);
+    daughtersID.addAll(somePerson.daughtersID);
+    childrenNames.addAll(somePerson.childrenNames);
+
+    brothersID.addAll(somePerson.brothersID);
+    sistersID.addAll(somePerson.sistersID);
+    siblingsID.addAll(somePerson.siblingsID);
+  }
 }
