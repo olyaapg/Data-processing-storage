@@ -22,8 +22,9 @@ public class PersonInfo {
   public Set<String> sonsID = new HashSet<>();
   public Set<String> daughtersID = new HashSet<>();
   public Set<String> childrenNames = new HashSet<>();
-  public Set<String> brothersID = new HashSet<>();
-  public Set<String> sistersID = new HashSet<>();
+  public Set<String> childrenID = new HashSet<>();
+  public Set<String> brothersNames = new HashSet<>();
+  public Set<String> sistersNames = new HashSet<>();
   public Set<String> siblingsID = new HashSet<>();
 
   public void merge(PersonInfo somePerson) {
@@ -68,8 +69,20 @@ public class PersonInfo {
     daughtersID.addAll(somePerson.daughtersID);
     childrenNames.addAll(somePerson.childrenNames);
 
-    brothersID.addAll(somePerson.brothersID);
-    sistersID.addAll(somePerson.sistersID);
+    brothersNames.addAll(somePerson.brothersNames);
+    sistersNames.addAll(somePerson.sistersNames);
     siblingsID.addAll(somePerson.siblingsID);
+  }
+
+  @Override
+  public String toString() {
+    return "ID: " + id + " " + firstname + " " + surname + " " + gender +
+        " | mother: " + motherName +
+        " | father: " + fatherName +
+        " | spouse: " + spouseName +
+        " | sisters: " + sistersNames.toString() +
+        " | brothers: " + brothersNames.toString() +
+        " | SibCnt: " + siblingsCount +
+        " | ChildCnt: " + childrenCount;
   }
 }

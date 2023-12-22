@@ -146,13 +146,13 @@ public class MyParser {
             reader.next();
             var brotherName = reader.getText().split("\\s+");
             assert personInfo != null;
-            personInfo.brothersID.add(brotherName[0] + " " + brotherName[1]);
+            personInfo.brothersNames.add(brotherName[0] + " " + brotherName[1]);
           }
           case ("sister") -> {
             reader.next();
             var sisterName = reader.getText().split("\\s+");
             assert personInfo != null;
-            personInfo.sistersID.add(sisterName[0] + " " + sisterName[1]);
+            personInfo.sistersNames.add(sisterName[0] + " " + sisterName[1]);
           }
           case ("siblings-number") -> {
             if (reader.getAttributeLocalName(0).equals("value")) {
@@ -222,10 +222,13 @@ public class MyParser {
       }
     }
     reader.close();
+    assert people != null;
     return putInOrder(people, nPeople);
   }
 
   private ArrayList<PersonInfo> putInOrder(ArrayList<PersonInfo> people, int nPeople) {
+    System.out.println("Put in order");
+
     HashMap<String, PersonInfo> peopleWithID = new HashMap<>();
     ArrayList<PersonInfo> rest = new ArrayList<>();
 
@@ -246,7 +249,8 @@ public class MyParser {
     people = rest;
     rest = new ArrayList<>();
 
-    Predicate<PersonInfo> nonNullName = person -> person.firstname != null && person.surname != null;
+    Predicate<PersonInfo> nonNullName = person -> person.firstname != null
+        && person.surname != null;
     assert peopleWithID.values().parallelStream().allMatch(nonNullName);
     assert people.parallelStream().allMatch(nonNullName);
 
@@ -266,15 +270,37 @@ public class MyParser {
     people = rest;
     rest = new ArrayList<>();
 
+    HashSet<PersonInfo> peopleSet = new HashSet<>(people);
 
-    System.out.println(rest);
-    System.out.println(rest.size());
-    HashSet<PersonInfo> personInfoHashSet = new HashSet<>(rest);
-    System.out.println(personInfoHashSet.size());
-    return people;
+    for (PersonInfo person : peopleSet) {
+      System.out.println(person);
+    }
+    System.out.println(findSimilar(x -> x.firstname.equals("Tonya") && x.surname.equals("Loschiavo"), peopleWithID.values()).get(0).toString());
+
+
+
+    for (PersonInfo person : peopleSet) {
+      Predicate<PersonInfo> nameEquals = person2 -> person2.firstname.equals(person.firstname)
+          && person2.surname.equals(person.surname);
+      List<PersonInfo> similarPeople = findSimilar(nameEquals, peopleWithID.values());
+      for (PersonInfo personn : similarPeople) {
+        System.out.println(personn);
+      }
+      similarPeople.get(0).merge(person);
+      if (similarPeople.size() > 1) {
+        rest.addAll(similarPeople);
+      }
+    }
+
+    assert rest.isEmpty();
+
+    Validating validator = new Validating();
+    validator.check(peopleWithID, this);
+
+    return new ArrayList<>(peopleWithID.values());
   }
 
-  private List<PersonInfo> findSimilar(Predicate<PersonInfo> predicate,
+  public List<PersonInfo> findSimilar(Predicate<PersonInfo> predicate,
       Collection<PersonInfo> people) {
     return people.
         parallelStream().
