@@ -245,50 +245,50 @@ public class MyParser {
     }
 
     assert peopleWithID.size() == nPeople;
-
-    people = rest;
-    rest = new ArrayList<>();
-
     Predicate<PersonInfo> nonNullName = person -> person.firstname != null
         && person.surname != null;
     assert peopleWithID.values().parallelStream().allMatch(nonNullName);
     assert people.parallelStream().allMatch(nonNullName);
 
+    people = rest;
+    rest = new ArrayList<>();
+
     for (PersonInfo person : people) {
-      Predicate<PersonInfo> nameEquals = person2 -> person.firstname.equals(person2.firstname)
-          && person.surname.equals(person2.surname);
+      Predicate<PersonInfo> nameEquals = person2 -> person2.firstname.equals(person.firstname)
+          && person2.surname.equals(person.surname);
       List<PersonInfo> similarPeople = findSimilar(nameEquals, peopleWithID.values());
-      if (similarPeople.size() > 1) {
-        rest.addAll(similarPeople);
+      if (similarPeople.size() == 1) {
         PersonInfo somePerson = similarPeople.get(0);
         somePerson.merge(person);
-      } else {
-        similarPeople.get(0).merge(person);
+        peopleWithID.replace(somePerson.id, somePerson);
+        rest.addAll(similarPeople);
+      } else if (similarPeople.size() > 1) {
+        PersonInfo somePerson = similarPeople.get(0);
+        rest.addAll(similarPeople);
+        if (somePerson.gender == null && person.gender != null) {
+          somePerson.merge(person);
+        }
       }
     }
 
     people = rest;
     rest = new ArrayList<>();
 
-    HashSet<PersonInfo> peopleSet = new HashSet<>(people);
-
-    for (PersonInfo person : peopleSet) {
-      System.out.println(person);
-    }
-    System.out.println(findSimilar(x -> x.firstname.equals("Tonya") && x.surname.equals("Loschiavo"), peopleWithID.values()).get(0).toString());
-
-
-
-    for (PersonInfo person : peopleSet) {
-      Predicate<PersonInfo> nameEquals = person2 -> person2.firstname.equals(person.firstname)
-          && person2.surname.equals(person.surname);
-      List<PersonInfo> similarPeople = findSimilar(nameEquals, peopleWithID.values());
-      for (PersonInfo personn : similarPeople) {
-        System.out.println(personn);
-      }
-      similarPeople.get(0).merge(person);
-      if (similarPeople.size() > 1) {
-        rest.addAll(similarPeople);
+    for (PersonInfo person : people) {
+      if (person.siblingsID != null) {
+        HashSet<String> siblings = new HashSet<>(person.siblingsID);
+        List<PersonInfo> found = findSimilar(
+            x -> {
+              HashSet<String> xsib = new HashSet<>(x.siblingsID);
+              xsib.retainAll(siblings);
+              return !xsib.isEmpty();
+            }, peopleWithID.values()
+        );
+        if (found.size() == 1) {
+          found.get(0).merge(person);
+        } else {
+          rest.add(person);
+        }
       }
     }
 
