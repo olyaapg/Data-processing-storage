@@ -260,14 +260,10 @@ public class MyParser {
       if (similarPeople.size() == 1) {
         PersonInfo somePerson = similarPeople.get(0);
         somePerson.merge(person);
-        peopleWithID.replace(somePerson.id, somePerson);
-        rest.addAll(similarPeople);
       } else if (similarPeople.size() > 1) {
         PersonInfo somePerson = similarPeople.get(0);
         rest.addAll(similarPeople);
-        if (somePerson.gender == null && person.gender != null) {
-          somePerson.merge(person);
-        }
+        somePerson.merge(person);
       }
     }
 

@@ -82,6 +82,7 @@ public class PersonInfo {
         " | spouse: " + spouseName +
         " | sisters: " + sistersNames.toString() +
         " | brothers: " + brothersNames.toString() +
+        " | siblings: " + siblingsID.toString() +
         " | SibCnt: " + siblingsCount +
         " | ChildCnt: " + childrenCount;
   }
