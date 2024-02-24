@@ -1,31 +1,13 @@
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.time.LocalDateTime;
 
 public class Main {
-
-  public static void messaging(Socket clientSocket, Socket destinationServerSocket) {
-    try {
-      InputStream clientInput = clientSocket.getInputStream();
-      OutputStream clientOutput = clientSocket.getOutputStream();
-      InputStream destinationServerInput = destinationServerSocket.getInputStream();
-      OutputStream destinationServerOutput = destinationServerSocket.getOutputStream();
-
-      byte[] buffer = new byte[1024];
-      int fromClientToServer;
-      int fromServerToClient;
-
-      do {
-        if ((fromClientToServer = clientInput.read(buffer)) != -1) {
-          destinationServerOutput.write(buffer, 0, fromClientToServer);
-        }
-        if ((fromServerToClient = destinationServerInput.read(buffer)) != -1) {
-          clientOutput.write(buffer, 0, fromServerToClient);
-        }
-      } while (fromServerToClient != -1 || fromClientToServer != -1);
-    } catch (IOException e) {
-      System.out.println(e.getMessage());
-    }
-  }
 
   public static void main(String[] args) {
     if (args.length < 3) {
@@ -33,29 +15,76 @@ public class Main {
     }
 
     final int PORT_P = Integer.parseInt(args[0]);
-    final String DESTINATION_SERVER = args[1];
+    final String TARGET_SERVER = args[1];
     final int PORT_P1 = Integer.parseInt(args[2]);
+    var hostname = "localhost";
 
-    try (ServerSocket serverSocket = new ServerSocket(PORT_P)) {
-      System.out.println("Сервер запущен");
+    try {
+      ServerSocketChannel channel = ServerSocketChannel.open();
+      channel.bind(new InetSocketAddress(hostname, PORT_P));
+      channel.configureBlocking(false);
 
-      while (true) {
-        Socket clientSocket = serverSocket.accept();
-        System.out.println("Подключился клиент: " + clientSocket.getInetAddress().getHostName());
+      Selector selector = Selector.open();
+      channel.register(selector, SelectionKey.OP_ACCEPT);
 
-        try (Socket destinationServerSocket = new Socket(DESTINATION_SERVER, PORT_P1)) {
-          System.out.println("Установлено соединение с целевым сервером");
-          clientSocket.setSoTimeout(1000);
-          destinationServerSocket.setSoTimeout(1000);
-          messaging(clientSocket, destinationServerSocket);
-          clientSocket.close();
-        } catch (ConnectException e) {
-          clientSocket.close();
-          System.out.println("Целевой сервер отказал в соединении");
+      ByteBuffer buffer = ByteBuffer.allocate(1024);
+
+      Client client = new Client(PORT_P, hostname);
+      Thread clientThread = new Thread(client);
+
+      TargetServer targetServer = new TargetServer(PORT_P1);
+      Thread serverThread = new Thread(targetServer);
+
+      serverThread.start();
+      clientThread.start();
+
+      for (int i = 0; i < 4; i++) {
+        selector.select();
+
+        for (SelectionKey key : selector.selectedKeys()) {
+          if (key.isAcceptable()) {
+            SocketChannel clientChannel = channel.accept();
+            if (clientChannel != null) {
+              clientChannel.configureBlocking(false);
+              System.out.println(LocalDateTime.now() + " | Подключился клиент");
+
+              SocketChannel targetServerChannel = SocketChannel.open(
+                  new InetSocketAddress(TARGET_SERVER, PORT_P1));
+              targetServerChannel.configureBlocking(false);
+              System.out.println(
+                  LocalDateTime.now() + " | Установлено соединение с целевым сервером.");
+
+              clientChannel.register(selector, SelectionKey.OP_READ, targetServerChannel);
+              targetServerChannel.register(selector, SelectionKey.OP_READ, clientChannel);
+            }
+          } else if (key.isReadable()) {
+            SocketChannel channel1 = (SocketChannel) key.channel();
+            SocketChannel channel2 = (SocketChannel) key.attachment();
+
+            int bytesRead = channel1.read(buffer);
+            if (bytesRead == -1) {
+              channel1.close();
+              channel2.close();
+              key.cancel();
+            } else if (bytesRead > 0) {
+              System.out.println(LocalDateTime.now() + " | Получены данные");
+              buffer.flip();
+              while (buffer.hasRemaining()) {
+                channel2.write(buffer);
+              }
+              System.out.println(LocalDateTime.now() + " | Данные переданы");
+              buffer.clear();
+            }
+          }
         }
+        selector.selectedKeys().clear();
       }
-    } catch (IOException e) {
-      System.out.println(e.getMessage());
+      channel.close();
+      selector.close();
+      clientThread.join();
+      serverThread.join();
+    } catch (IOException | InterruptedException e) {
+      throw new RuntimeException(e);
     }
   }
 }
