@@ -1,4 +1,6 @@
 Я назвала задачи очень криво, поздно поняла это.
-Task_* - Java лабы
-Task_*_clj - Clojure лабы
-Task_*_xml - XML лабы
+
+Task_X - Java лабы;
+Task_X_clj - Clojure лабы;
+Task_X_xml - XML лабы;
+где X - номер лабы.
