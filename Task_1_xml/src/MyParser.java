@@ -1,9 +1,8 @@
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.xml.stream.XMLInputFactory;
@@ -227,9 +226,9 @@ public class MyParser {
   }
 
   private ArrayList<PersonInfo> putInOrder(ArrayList<PersonInfo> people, int nPeople) {
-    System.out.println("Put in order");
+    System.out.println("Putting in order");
 
-    HashMap<String, PersonInfo> peopleWithID = new HashMap<>();
+    Map<String, PersonInfo> peopleWithID = new HashMap<>();
     ArrayList<PersonInfo> rest = new ArrayList<>();
 
     for (PersonInfo person : people) {
@@ -248,59 +247,39 @@ public class MyParser {
     Predicate<PersonInfo> nonNullName = person -> person.firstname != null
         && person.surname != null;
     assert peopleWithID.values().parallelStream().allMatch(nonNullName);
-    assert people.parallelStream().allMatch(nonNullName);
+    assert rest.parallelStream().allMatch(nonNullName);
 
-    people = rest;
-    rest = new ArrayList<>();
-
-    for (PersonInfo person : people) {
+    for (PersonInfo person : rest) {
       Predicate<PersonInfo> nameEquals = person2 -> person2.firstname.equals(person.firstname)
           && person2.surname.equals(person.surname);
-      List<PersonInfo> similarPeople = findSimilar(nameEquals, peopleWithID.values());
-      if (similarPeople.size() == 1) {
-        PersonInfo somePerson = similarPeople.get(0);
-        somePerson.merge(person);
-      } else if (similarPeople.size() > 1) {
-        PersonInfo somePerson = similarPeople.get(0);
-        rest.addAll(similarPeople);
-        somePerson.merge(person);
-      }
-    }
+      Map<String, PersonInfo> similarPeople = findSimilar(nameEquals, peopleWithID);
 
-    people = rest;
-    rest = new ArrayList<>();
-
-    for (PersonInfo person : people) {
-      if (person.siblingsID != null) {
-        HashSet<String> siblings = new HashSet<>(person.siblingsID);
-        List<PersonInfo> found = findSimilar(
-            x -> {
-              HashSet<String> xsib = new HashSet<>(x.siblingsID);
-              xsib.retainAll(siblings);
-              return !xsib.isEmpty();
-            }, peopleWithID.values()
-        );
-        if (found.size() == 1) {
-          found.get(0).merge(person);
-        } else {
-          rest.add(person);
+      if (!similarPeople.isEmpty()) {
+        for (PersonInfo somePerson : similarPeople.values()) {
+          person.merge(somePerson);
         }
+        for (String key : similarPeople.keySet()) {
+          peopleWithID.put(key, person);
+        }
+      } else {
+        System.out.println(
+            "couldn't find the id for the person" + person.firstname + " " + person.surname);
       }
     }
 
     assert rest.isEmpty();
 
-    Validating validator = new Validating();
-    validator.check(peopleWithID, this);
+    Validating validator = new Validating(peopleWithID);
+    validator.check(this);
 
     return new ArrayList<>(peopleWithID.values());
   }
 
-  public List<PersonInfo> findSimilar(Predicate<PersonInfo> predicate,
-      Collection<PersonInfo> people) {
-    return people.
+  public Map<String, PersonInfo> findSimilar(Predicate<PersonInfo> predicate,
+      Map<String, PersonInfo> people) {
+    return people.entrySet().
         parallelStream().
-        filter(predicate).
-        collect(Collectors.toList());
+        filter(entry -> predicate.test(entry.getValue())).
+        collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 }

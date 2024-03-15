@@ -10,7 +10,7 @@ public class Main {
     try (InputStream stream = new FileInputStream("src/resources/people.xml")) {
       ArrayList<PersonInfo> data = new MyParser().parse(stream);
 
-      for (int i = 0; i < 15; i++) {
+      for (int i = 1000; i < 1015; i++) {
         System.out.println(data.get(i).toString());
       }
     } catch (IOException | XMLStreamException e) {

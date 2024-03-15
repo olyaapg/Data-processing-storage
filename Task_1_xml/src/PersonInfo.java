@@ -17,15 +17,14 @@ public class PersonInfo {
   public String spouseName;
 
   public Integer siblingsCount;
-  public Integer childrenCount;
-
-  public Set<String> sonsID = new HashSet<>();
-  public Set<String> daughtersID = new HashSet<>();
-  public Set<String> childrenNames = new HashSet<>();
-  public Set<String> childrenID = new HashSet<>();
   public Set<String> brothersNames = new HashSet<>();
   public Set<String> sistersNames = new HashSet<>();
   public Set<String> siblingsID = new HashSet<>();
+
+  public Integer childrenCount;
+  public Set<String> sonsID = new HashSet<>();
+  public Set<String> daughtersID = new HashSet<>();
+  public Set<String> childrenNames = new HashSet<>();
 
   public void merge(PersonInfo somePerson) {
     if (id == null) {
@@ -51,7 +50,8 @@ public class PersonInfo {
 
     if (wifeId == null) {
       wifeId = somePerson.wifeId;
-    } else if (husbandId == null) {
+    }
+    if (husbandId == null) {
       husbandId = somePerson.husbandId;
     }
     if (spouseName == null) {
@@ -82,8 +82,8 @@ public class PersonInfo {
         " | spouse: " + spouseName +
         " | sisters: " + sistersNames.toString() +
         " | brothers: " + brothersNames.toString() +
-        " | siblings: " + siblingsID.toString() +
-        " | SibCnt: " + siblingsCount +
-        " | ChildCnt: " + childrenCount;
+        " | sibCnt: " + siblingsCount +
+        " | children: " + childrenNames.toString() +
+        " | childCnt: " + childrenCount;
   }
 }
