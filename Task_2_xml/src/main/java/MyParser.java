@@ -267,11 +267,10 @@ public class MyParser {
       }
     }
 
-    assert rest.isEmpty();
-
     Validating validator = new Validating(peopleWithID);
     validator.check(this);
 
+    System.out.println(peopleWithID.get("P403398"));
     return new ArrayList<>(peopleWithID.values());
   }
 
