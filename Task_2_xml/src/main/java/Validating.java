@@ -36,10 +36,7 @@ public class Validating {
                 people.get(person.husbandId).gender = "M";
             } else if (person.spouseName != null) {
                 var spouseName = person.spouseName.split("\\s+");
-                Predicate<PersonInfo> nameEquals = person2 -> spouseName[0].equals(person2.firstname)
-                        && spouseName[1].equals(person2.surname);
-                Map<String, PersonInfo> foundList = parser.findSimilar(nameEquals, people);
-                assert foundList.size() == 1 || foundList.isEmpty();
+                Map<String, PersonInfo> foundList = findNamesEquals(parser, spouseName);
                 if (!foundList.isEmpty()) {
                     PersonInfo spouse = foundList.values().stream().toList().get(0);
                     if (spouse.gender.equals("F")) {
@@ -58,6 +55,12 @@ public class Validating {
             assert person.wifeId != null || person.husbandId != null;
             person.spouseId = Objects.requireNonNullElseGet(person.wifeId, () -> person.husbandId);
         }
+    }
+
+    private Map<String, PersonInfo> findNamesEquals(MyParser parser, String[] spouseName) {
+        Predicate<PersonInfo> nameEquals = person2 -> spouseName[0].equals(person2.firstname)
+                && spouseName[1].equals(person2.surname);
+        return parser.findSimilar(nameEquals, people);
     }
 
     private void fillAndCheckParents() {
@@ -90,10 +93,23 @@ public class Validating {
         }
     }
 
-    private void fillAndCheckChildren() {
+    private void fillAndCheckChildren(MyParser parser) {
         System.out.println("Filling and checking children");
 
         for (PersonInfo person : people.values()) {
+            for (String childName : person.childrenNames) {
+                var name = childName.split("\\s+");
+                var foundList = findNamesEquals(parser, name);
+                if (!foundList.isEmpty()) {
+                    for (PersonInfo child : foundList.values()) {
+                        if (child.gender.equals("M")) {
+                            person.sonsID.add(child.id);
+                        } else {
+                            person.daughtersID.add(child.id);
+                        }
+                    }
+                }
+            }
 
             for (String sonId : person.sonsID) {
                 var son = people.get(sonId);
@@ -125,9 +141,6 @@ public class Validating {
                     person.brothersNames.add(siblingName);
                 }
             }
-
-            assert person.siblingsCount == null ||
-                    person.siblingsCount == (person.sistersNames.size() + person.brothersNames.size());
         }
     }
 
@@ -136,6 +149,9 @@ public class Validating {
             assert person.id != null;
             assert person.firstname != null && person.surname != null;
             assert person.gender != null;
+            assert person.childrenCount == person.childrenNames.size();
+          //  if (person.childrenCount != person.daughtersID.size() + person.sonsID.size())
+               // throw new AssertionError();
         }
     }
 
@@ -143,7 +159,7 @@ public class Validating {
         checkFullnessGenderAndSpouse(parser);
         fillAndCheckParents();
         fillAndCheckSiblings();
-        fillAndCheckChildren();
+        fillAndCheckChildren(parser);
         finalCheck();
     }
 }

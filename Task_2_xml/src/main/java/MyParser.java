@@ -12,7 +12,7 @@ import javax.xml.stream.XMLStreamReader;
 
 public class MyParser {
 
-  public ArrayList<PersonInfo> parse(InputStream stream) throws XMLStreamException {
+  public Map<String, PersonInfo> parse(InputStream stream) throws XMLStreamException {
     XMLInputFactory streamFactory = XMLInputFactory.newInstance();
     XMLStreamReader reader = streamFactory.createXMLStreamReader(stream);
 
@@ -143,13 +143,13 @@ public class MyParser {
           }
           case ("brother") -> {
             reader.next();
-            var brotherName = reader.getText().split("\\s+");
+            var brotherName = reader.getText().trim().split("\\s+");
             assert personInfo != null;
             personInfo.brothersNames.add(brotherName[0] + " " + brotherName[1]);
           }
           case ("sister") -> {
             reader.next();
-            var sisterName = reader.getText().split("\\s+");
+            var sisterName = reader.getText().trim().split("\\s+");
             assert personInfo != null;
             personInfo.sistersNames.add(sisterName[0] + " " + sisterName[1]);
           }
@@ -163,7 +163,7 @@ public class MyParser {
           }
           case ("child") -> {
             reader.next();
-            var childName = reader.getText().split("\\s+");
+            var childName = reader.getText().trim().split("\\s+");
             assert personInfo != null;
             personInfo.childrenNames.add(childName[0] + " " + childName[1]);
           }
@@ -193,13 +193,13 @@ public class MyParser {
           }
           case ("father") -> {
             reader.next();
-            var fatherName = reader.getText().split("\\s+");
+            var fatherName = reader.getText().trim().split("\\s+");
             assert personInfo != null;
             personInfo.fatherName = fatherName[0] + " " + fatherName[1];
           }
           case ("mother") -> {
             reader.next();
-            var motherName = reader.getText().split("\\s+");
+            var motherName = reader.getText().trim().split("\\s+");
             assert personInfo != null;
             personInfo.motherName = motherName[0] + " " + motherName[1];
           }
@@ -225,7 +225,7 @@ public class MyParser {
     return putInOrder(people, nPeople);
   }
 
-  private ArrayList<PersonInfo> putInOrder(ArrayList<PersonInfo> people, int nPeople) {
+  private Map<String, PersonInfo> putInOrder(ArrayList<PersonInfo> people, int nPeople) {
     System.out.println("Putting in order");
 
     Map<String, PersonInfo> peopleWithID = new HashMap<>();
@@ -259,6 +259,7 @@ public class MyParser {
           person.merge(somePerson);
         }
         for (String key : similarPeople.keySet()) {
+          person.id = key;
           peopleWithID.put(key, person);
         }
       } else {
@@ -270,8 +271,7 @@ public class MyParser {
     Validating validator = new Validating(peopleWithID);
     validator.check(this);
 
-    System.out.println(peopleWithID.get("P403398"));
-    return new ArrayList<>(peopleWithID.values());
+    return peopleWithID;
   }
 
   public Map<String, PersonInfo> findSimilar(Predicate<PersonInfo> predicate,

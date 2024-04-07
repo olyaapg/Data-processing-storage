@@ -1,77 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <xsd:schema
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  targetNamespace="http://fit.nsu.ru/people"
-  elementFormDefault="qualified"
-  xmlns:tns="http://fit.nsu.ru/people">
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="https://fit.nsu.ru/people"
+        elementFormDefault="qualified"
+        xmlns:tns="https://fit.nsu.ru/people">
 
-  <xsd:complexType name="id-type">
-    <xsd:attribute name="id" type="xsd:IDREF" use="required"/>
-  </xsd:complexType>
-
-  <xsd:simpleType name="person-name-type">
-    <xsd:restriction base="xsd:string">
-      <xsd:pattern value="\w+\s\w+"/>
-    </xsd:restriction>
-  </xsd:simpleType>
-
-  <xsd:simpleType name="gender-type">
-    <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="F"/>
-      <xsd:enumeration value="M"/>
-    </xsd:restriction>
-  </xsd:simpleType>
-
-  <xsd:complexType name="parents-type">
-    <xsd:sequence>
-      <xsd:element name="parent-id" type="tns:id-type" minOccurs="0" maxOccurs="2"/>
-    </xsd:sequence>
-  </xsd:complexType>
-
-  <xsd:complexType name="siblings-type">
-    <xsd:sequence>
-      <xsd:element name="sibling-id" type="tns:id-type" minOccurs="0" maxOccurs="unbounded"/>
-    </xsd:sequence>
-    <xsd:attribute name="count" type="xsd:int" use="required"/>
-  </xsd:complexType>
-
-  <xsd:complexType name="sons-type">
-    <xsd:sequence>
-      <xsd:element name="son-id" type="tns:id-type" minOccurs="0" maxOccurs="unbounded"/>
-    </xsd:sequence>
-  </xsd:complexType>
-
-  <xsd:complexType name="daughters-type">
-    <xsd:sequence>
-      <xsd:element name="daughter-id" type="tns:id-type" minOccurs="0" maxOccurs="unbounded"/>
-    </xsd:sequence>
-  </xsd:complexType>
-
-  <xsd:complexType name="person-type">
-    <xsd:sequence>
-      <xsd:element name="spouse" type="tns:id-type" minOccurs="0"/>
-      <xsd:element name="parents" type="tns:parents-type" minOccurs="0"/>
-      <xsd:element name="siblings" type="tns:siblings-type" minOccurs="0"/>
-      <xsd:element name="children">
-        <xsd:complexType>
-          <xsd:sequence>
-            <xsd:element name="sons" type="tns:sons-type" minOccurs="0"/>
-            <xsd:element name="daughters" type="tns:daughters-type" minOccurs="0"/>
-          </xsd:sequence>
-          <xsd:attribute name="count" type="xsd:int" use="required"/>
-        </xsd:complexType>
-      </xsd:element>
-    </xsd:sequence>
-    <xsd:attribute name="id" type="xsd:ID" use="required"/>
-    <xsd:attribute name="gender" type="tns:gender-type" use="required"/>
-    <xsd:attribute name="name" type="tns:person-name-type" use="required"/>
-  </xsd:complexType>
-
-  <xsd:element name="people">
-    <xsd:complexType>
-      <xsd:sequence>
-        <xsd:element name="person" type="tns:person-type" minOccurs="0" maxOccurs="unbounded"/>
-      </xsd:sequence>
-      <xsd:attribute name="count" type="xsd:int" use="required"/>
+    <xsd:complexType name="id-type">
+        <xsd:attribute name="id" type="xsd:IDREF" use="required"/>
     </xsd:complexType>
-  </xsd:element>
+
+    <xsd:simpleType name="person-name-type">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="\w+\s\w+"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="gender-type">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="F"/>
+            <xsd:enumeration value="M"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="parents-type">
+        <xsd:sequence>
+            <xsd:element name="parent-id" type="tns:id-type" minOccurs="0" maxOccurs="2"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="siblings-type">
+        <xsd:sequence>
+            <xsd:element name="sibling-id" type="tns:id-type" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="count" type="xsd:int" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="sons-type">
+        <xsd:sequence>
+            <xsd:element name="son-id" type="tns:id-type" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="daughters-type">
+        <xsd:sequence>
+            <xsd:element name="daughter-id" type="tns:id-type" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="person-type">
+        <xsd:sequence>
+            <xsd:element name="spouse" type="tns:id-type" minOccurs="0"/>
+            <xsd:element name="parents" type="tns:parents-type" minOccurs="0"/>
+            <xsd:element name="siblings" type="tns:siblings-type" minOccurs="0"/>
+            <xsd:element name="children">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="sons" type="tns:sons-type" minOccurs="0"/>
+                        <xsd:element name="daughters" type="tns:daughters-type" minOccurs="0"/>
+                    </xsd:sequence>
+                    <xsd:attribute name="count" type="xsd:int" use="required"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:ID" use="required"/>
+        <xsd:attribute name="gender" type="tns:gender-type" use="required"/>
+        <xsd:attribute name="name" type="tns:person-name-type" use="required"/>
+    </xsd:complexType>
+
+    <xsd:element name="people">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="person" type="tns:person-type" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:attribute name="count" type="xsd:int" use="required"/>
+        </xsd:complexType>
+    </xsd:element>
 </xsd:schema>

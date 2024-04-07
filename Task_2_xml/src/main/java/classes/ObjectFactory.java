@@ -1,14 +1,13 @@
 
 package classes;
 
-import javax.annotation.processing.Generated;
 import javax.xml.bind.annotation.XmlRegistry;
 
 /**
  * This object contains factory methods for each
  * Java content interface and Java element interface
  * generated in the classes package.
- * <p>An ObjectFactory allows you to programatically
+ * <p>An ObjectFactory allows you to programmatically
  * construct new instances of the Java representation
  * for XML content. The Java representation of XML
  * content can consist of schema derived interfaces
@@ -18,7 +17,6 @@ import javax.xml.bind.annotation.XmlRegistry;
  * provided in this class.
  */
 @XmlRegistry
-@Generated(value = "com.sun.tools.xjc.Driver", comments = "JAXB RI v3.0.2", date = "2024-04-05T22:26:24+07:00")
 public class ObjectFactory {
 
 

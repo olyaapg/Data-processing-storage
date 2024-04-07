@@ -40,7 +40,6 @@ public class PersonInfo {
     if (gender == null) {
       gender = somePerson.gender;
     }
-
     if (motherName == null) {
       motherName = somePerson.motherName;
     }
@@ -58,11 +57,10 @@ public class PersonInfo {
     if (spouseName == null) {
       spouseName = somePerson.spouseName;
     }
-
-    if (siblingsCount == null) {
+    if (siblingsCount == null || (somePerson.siblingsCount != null && siblingsCount < somePerson.siblingsCount)) {
       siblingsCount = somePerson.siblingsCount;
     }
-    if (childrenCount == null) {
+    if (childrenCount == null || (somePerson.childrenCount != null && childrenCount < somePerson.childrenCount)) {
       childrenCount = somePerson.childrenCount;
     }
 
