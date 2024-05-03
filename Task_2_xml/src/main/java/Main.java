@@ -53,9 +53,13 @@ public class Main {
         for (var p : table.values()) {
             var person = data.get(p.getId());
 
-            if (person.spouseId != null) {
+            if (person.wifeId != null) {
                 IdType id = new IdType();
-                id.setId(table.get(person.spouseId));
+                id.setId(table.get(person.wifeId));
+                p.setSpouse(id);
+            } else if (person.husbandId != null) {
+                IdType id = new IdType();
+                id.setId(table.get(person.husbandId));
                 p.setSpouse(id);
             }
 
