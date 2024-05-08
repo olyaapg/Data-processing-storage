@@ -27,27 +27,17 @@ public class Main {
         }
 
         People people = new People();
-        var table = new HashMap<String, PersonType>();
-        for (var p : Objects.requireNonNull(data).values()) {
-            PersonType person = new PersonType();
+        int count = Objects.requireNonNull(data).keySet().size();
+        var table = new HashMap<String, PersonType>(count);
 
-            person.setId(p.id);
+        for (var key : data.keySet()) {
+            PersonType person = new PersonType();
+            var p = data.get(key);
+
+            person.setId(key);
             person.setName(p.firstname + " " + p.surname);
             person.setGender(GenderType.valueOf(p.gender));
-            table.put(p.id, person);
-        }
-
-        for (var k : data.keySet()) {
-            if (!table.containsKey(k)) {
-                PersonType person = new PersonType();
-                PersonInfo p = data.get(k);
-
-                person.setId(p.id);
-                person.setName(p.firstname + " " + p.surname);
-                person.setGender(GenderType.valueOf(p.gender));
-                table.put(p.id, person);
-                table.put(k, person);
-            }
+            table.put(key, person);
         }
 
         for (var p : table.values()) {
@@ -103,7 +93,7 @@ public class Main {
             p.setParents(parents);
         }
         people.getPerson().addAll(table.values());
-        people.setCount(table.size());
+        people.setCount(count);
 
         try {
             var classLoader = People.class.getClassLoader();
@@ -118,7 +108,7 @@ public class Main {
 
             marshaller.marshal(people, new File("src/main/resources/output.xml"));
         } catch (JAXBException | SAXException e) {
-            System.out.println(e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 }
