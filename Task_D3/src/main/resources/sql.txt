@@ -1,0 +1,15 @@
+# попытка создать первичный ключ в таблице parent - ошибка
+
+    ALTER TABLE parent
+    ADD CONSTRAINT person_parent_pkey PRIMARY KEY (person_id, parent_id);
+
+"[23505] ОШИБКА: создать уникальный индекс "person_parent_pkey" не удалось
+Подробности: Ключ (person_id, parent_id)=(P399597, P395513) дублируется."
+
+---
+# попытка создать первичный ключ в таблице spouse - все ок
+
+    ALTER TABLE spouse
+    ADD CONSTRAINT person_spouse_pkey PRIMARY KEY (person_id, spouse_id);
+
+"[2024-05-11 18:48:41] completed in 122 ms"
